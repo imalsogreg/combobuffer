@@ -20,13 +20,17 @@ where
 
 import Prelude hiding (length)
 import qualified Data.Vector.Unboxed as V
+--import qualified Data.Foldable as F
+import qualified Data.Traversable as T
 
 type family El c :: *
 
+class Initializable c where
 -- | Create a new 'Initializable' with the given value at every position.
 -- Essentially a generalized 'Prelude.replicate'
-class Initializable c where
   newInit :: El c -> Int -> c
+-- | Create a new 'Initializable' from a list
+  travInit :: (T.Traversable t) => t (El c) -> c
 
 -- | The RingBuffer interface.
 --

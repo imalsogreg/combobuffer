@@ -18,6 +18,8 @@ import           Prelude hiding (length)
 import           Data.RingBuffer.Class
 import           Data.RingBuffer.Chord
 import qualified Data.Vector.Unboxed as V
+import qualified Data.Foldable as F
+import qualified Data.Traversable as T
 
 data ComboBuffer a =
    CB {-# UNPACK #-} !Int          -- Half Size
@@ -37,6 +39,7 @@ type instance El (ComboBuffer a) = a
 instance V.Unbox a => Initializable (ComboBuffer a) where
   {-# INLINE newInit #-}
   newInit = newInit'
+  travInit = travInit'
 
 newInit' :: V.Unbox a => a -> Int -> ComboBuffer a
 newInit' el sz
@@ -48,6 +51,19 @@ newInit' el sz
                           iv   = V.replicate half el
                       in  CBOdd half 0 iv iv (emptyChord el)
 {-# INLINE newInit' #-}
+
+travInit' :: (V.Unbox a, T.Traversable t) => t a -> ComboBuffer a
+travInit' els'
+  | sz        <= 0  = error "Can't initialize ComboBuffer with size <= 0"
+  | sz `rem` 2 == 0 = let half = sz `div` 2
+                          (olds, news) = V.splitAt half els 
+                      in CB half 0 olds news (emptyChord $ els ! 0)
+  | otherwise       = let half = (sz + 1) `div` 2
+                          (olds, news) = V.splitAt half els
+                      in CBOdd half 0 olds news (emptyChord $ els ! 0)
+    where sz  = V.length els
+          els = (V.fromList . F.toList) els'
+                      
 
 instance V.Unbox a => RingBuffer (ComboBuffer a) where
   {-# INLINE length #-}

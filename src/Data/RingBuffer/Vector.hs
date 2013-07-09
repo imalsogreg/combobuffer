@@ -53,6 +53,9 @@ instance V.Unbox el => Initializable (VBuffer el) where
       stale <- newIORef False
       let offset = 0
       return $ VBuffer { size, offset, fullBuffer, partial, stale }
+  {-# INLINE travInit #-}
+  travInit els = unsafePerformIO $ do
+    fullBuffer <- V.unsafeFreeze =<< VM.fromList
 
 instance V.Unbox el => RingBuffer (VBuffer el) where
   {-# INLINE length #-}

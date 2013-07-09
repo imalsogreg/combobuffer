@@ -18,6 +18,7 @@ import           Prelude hiding (length)
 import           Data.RingBuffer.Class
 import           Data.IntMap (IntMap)
 import qualified Data.IntMap as M
+import qualified Data.Foldable as F
 
 data MapBuffer a = MB {-# UNPACK #-} !Int !(IntMap a) 
   deriving (Eq, Show, Ord)
@@ -27,6 +28,10 @@ type instance El (MapBuffer el) = el
 instance Initializable (MapBuffer el) where
   {-# INLINE newInit #-}
   newInit el sz = MB 0 $ M.fromDistinctAscList $ map (,el) [0..sz-1]
+  {-# INLINE travInit #-}
+  travInit els' =  MB 0 $ M.fromDistinctAscList $ zip [0..] els
+    where els = F.toList els'
+
 
 instance RingBuffer (MapBuffer el) where
   {-# INLINE length #-}
