@@ -15,7 +15,8 @@ import           Prelude hiding (length, (!!))
 import           Data.RingBuffer.Class
 
 import qualified Data.Sequence as S
-import           Data.Foldable
+import qualified Data.Foldable as F
+import qualified Data.Traversable as T
 
 newtype SeqBuffer a = RB (S.Seq a) deriving (Eq, Ord, Show)
 
@@ -24,6 +25,7 @@ type instance El (SeqBuffer a) = a
 instance Initializable (SeqBuffer a) where
   {-# INLINE newInit #-}
   newInit = newInit'
+  travInit = travInit'
 
 instance RingBuffer (SeqBuffer a) where
   {-# INLINE length #-}
@@ -33,7 +35,7 @@ instance RingBuffer (SeqBuffer a) where
   {-# INLINE (!) #-}
   (!)     = (!!)
   {-# INLINE slice #-}
-  slice (RB sq) start num = toList . S.take num $ S.drop start sq
+  slice (RB sq) start num = F.toList . S.take num $ S.drop start sq
 
 -- | Create a new SeqBuffer, initialized to all 0's, of the given size
 new :: (Num a) => Int -> SeqBuffer a
@@ -45,6 +47,11 @@ newInit' :: a -> Int -> SeqBuffer a
 newInit' _ sz | sz <= 0 = error "can't make empty ringbuffer"
 newInit' i sz           = RB (S.replicate sz i)
 {-# INLINE newInit' #-}
+
+travInit' :: (T.Traversable f, F.Foldable f) => f a -> SeqBuffer a
+travInit' fs 
+  | null (F.toList fs) = error "can't make empty ringbuffer"
+  | otherwise          = RB $ S.fromList (F.toList fs)
 
 -- | Get the total size of a SeqBuffer.
 length' :: SeqBuffer a -> Int

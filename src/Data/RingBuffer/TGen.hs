@@ -40,7 +40,7 @@ decTN sz nm elname binders =
 
 mkElInst tname elname = return [TySynInstD ''El [tname] (elname) ]
 
-mkInitInst vsz nm tname = let nmStr = show nm in [d| instance Initializable $(tname) where {-# INLINE newInit #-}; newInit el sz | sz >= 0 && sz <= vsz = $(appsE $ conE nm:replicate vsz [| el |]) ; newInit el sz = error ("cannot initialize " ++ nmStr ++ " with size: " ++ show sz) |]
+mkInitInst vsz nm tname = let nmStr = show nm in [d| instance Initializable $(tname) where {-# INLINE newInit #-}; newInit el sz | sz >= 0 && sz <= vsz = $(appsE $ conE nm:replicate vsz [| el |]) ; newInit el sz = error ("cannot initialize " ++ nmStr ++ " with size: " ++ show sz) ; #TODO# |]
 
 mkRbInst vsz nm tname = [d| instance RingBuffer $(tname) where {-# INLINE length #-}; length = const vsz; {-# INLINE (!) #-}; (!) = $(mkLookup vsz nm); {-# INLINE push #-}; push = $(mkPush vsz nm) |]
 

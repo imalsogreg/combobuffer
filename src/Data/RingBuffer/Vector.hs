@@ -20,6 +20,7 @@ import Control.Exception
 import Control.Monad
 import Data.IORef
 import System.IO.Unsafe (unsafePerformIO)
+import qualified Data.Foldable as F
 
 import Data.RingBuffer.Class
 
@@ -55,7 +56,12 @@ instance V.Unbox el => Initializable (VBuffer el) where
       return $ VBuffer { size, offset, fullBuffer, partial, stale }
   {-# INLINE travInit #-}
   travInit els = unsafePerformIO $ do
-    fullBuffer <- V.unsafeFreeze =<< VM.fromList
+    let fullBuffer = V.fromList (F.toList els)
+        partial    = V.fromList (F.toList els)
+        offset     = 0
+        size = V.length fullBuffer
+    stale <- newIORef False
+    return $ VBuffer { size, offset, fullBuffer, partial, stale }
 
 instance V.Unbox el => RingBuffer (VBuffer el) where
   {-# INLINE length #-}
